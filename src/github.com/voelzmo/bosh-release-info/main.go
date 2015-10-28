@@ -30,7 +30,7 @@ func main() {
 }
 
 func newLogger() boshlog.Logger {
-	logLevelString := "none"
+	logLevelString := "error"
 	level, err := boshlog.Levelify(logLevelString)
 	if err != nil {
 		err = bosherr.WrapError(err, "Invalid log level value")

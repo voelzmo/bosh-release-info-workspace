@@ -2,7 +2,9 @@ package commands
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshcmd "github.com/cloudfoundry/bosh-utils/fileutil"
@@ -22,10 +24,16 @@ func PackageListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger b
 				fail(err, logger)
 			}
 			releasePath := c.Args()[0]
-			fmt.Printf("Info for release: %s\n", releasePath)
+			relasePathSplit := strings.Split(releasePath, "/")
+			releaseName := relasePathSplit[len(relasePathSplit)-1]
+			fmt.Printf("Info for release: %s\n", releaseName)
 			fmt.Printf("\n")
 
-			reader := release.NewReader(releasePath, "/Users/d058546/.bosh-release-info-tmp", fs, comp)
+			tmpDir, err := ioutil.TempDir("", releaseName)
+			if err != nil {
+				fail(bosherr.WrapError(err, "Failed creating temporary directory:"), logger)
+			}
+			reader := release.NewReader(releasePath, tmpDir, fs, comp)
 
 			manifest, err := reader.Read()
 			if err != nil {
