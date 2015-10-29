@@ -4,10 +4,10 @@ Build
 $ ./bin/build
 ```
 
-Run 
+Run
 
 ```
-$ ./out/bosh-release-info package-list ~/workspace/bosh/release/dev_releases/bosh/bosh-217+dev.1.tgz
+$ ./out/bosh-release-info file-list ~/workspace/bosh/release/dev_releases/bosh/bosh-217+dev.1.tgz
 ```
 
 Enjoy
