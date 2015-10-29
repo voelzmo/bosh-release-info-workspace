@@ -33,6 +33,8 @@ func PackageListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger b
 			if err != nil {
 				fail(bosherr.WrapError(err, "Failed creating temporary directory:"), logger)
 			}
+			defer os.RemoveAll(tmpDir)
+
 			reader := release.NewReader(releasePath, tmpDir, fs, comp)
 
 			manifest, err := reader.Read()
