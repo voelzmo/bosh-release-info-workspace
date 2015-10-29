@@ -9,6 +9,7 @@ import (
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
 	"github.com/codegangsta/cli"
 	"github.com/voelzmo/bosh-release-info/commands"
+	"github.com/voelzmo/bosh-release-info/output"
 )
 
 func main() {
@@ -24,6 +25,7 @@ func main() {
 
 	app.Commands = []cli.Command{
 		commands.PackageListCommand(fileSystem, compressor, logger),
+		commands.FileListCommand(fileSystem, compressor, logger),
 	}
 
 	app.Run(os.Args)
@@ -35,13 +37,8 @@ func newLogger() boshlog.Logger {
 	if err != nil {
 		err = bosherr.WrapError(err, "Invalid log level value")
 		logger := boshlog.NewLogger(boshlog.LevelError)
-		fail(err, logger)
+		output.Fail(err, logger)
 	}
 
 	return boshlog.NewLogger(level)
-}
-
-func fail(err error, logger boshlog.Logger) {
-	logger.Error("main", err.Error())
-	os.Exit(1)
 }

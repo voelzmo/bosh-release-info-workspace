@@ -11,17 +11,18 @@ import (
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
 	"github.com/codegangsta/cli"
+	"github.com/voelzmo/bosh-release-info/output"
 	"github.com/voelzmo/bosh-release-info/release"
 )
 
-func PackageListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger boshlog.Logger) cli.Command {
+func FileListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger boshlog.Logger) cli.Command {
 	command := cli.Command{
-		Name:  "package-list",
-		Usage: "lists all packages in this release",
+		Name:  "file-list",
+		Usage: "lists all files in all packages in this release",
 		Action: func(c *cli.Context) {
 			if len(c.Args()) != 1 {
 				err := bosherr.Error("that's not how it works. provide the name to the release tarball!")
-				fail(err, logger)
+				output.Fail(err, logger)
 			}
 			releasePath := c.Args()[0]
 			relasePathSplit := strings.Split(releasePath, "/")
@@ -31,7 +32,7 @@ func PackageListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger b
 
 			tmpDir, err := ioutil.TempDir("", releaseName)
 			if err != nil {
-				fail(bosherr.WrapError(err, "Failed creating temporary directory:"), logger)
+				output.Fail(bosherr.WrapError(err, "Failed creating temporary directory:"), logger)
 			}
 			defer os.RemoveAll(tmpDir)
 
@@ -39,7 +40,7 @@ func PackageListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger b
 
 			manifest, err := reader.Read()
 			if err != nil {
-				fail(bosherr.WrapError(err, "Failed reading release:"), logger)
+				output.Fail(bosherr.WrapError(err, "Failed reading release:"), logger)
 			}
 			fmt.Printf("Release name: %s\n", manifest.Name)
 			fmt.Printf("\n")
@@ -47,7 +48,7 @@ func PackageListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger b
 			for _, pkg := range manifest.Packages {
 				pkgSpecFiles, err := reader.ReadPackageSpecs(pkg.Name)
 				if err != nil {
-					fail(bosherr.WrapError(err, "Failed reading package spec files:"), logger)
+					output.Fail(bosherr.WrapError(err, "Failed reading package spec files:"), logger)
 				}
 
 				fmt.Printf("Files for package '%s': %s", pkg.Name, pkgSpecFiles)
@@ -58,9 +59,4 @@ func PackageListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger b
 		},
 	}
 	return command
-}
-
-func fail(err error, logger boshlog.Logger) {
-	logger.Error("main", err.Error())
-	os.Exit(1)
 }
