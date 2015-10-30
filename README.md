@@ -1,18 +1,56 @@
-Build
+## Set GOPATH
+
+Source environment file directly
+```
+$ source .envrc
+```
+
+Or install [direnv](http://direnv.net/) and have this done automatically from now on
+```
+$ direnv allow
+```
+
+## Build
 
 ```
 $ ./bin/build
 ```
 
-Run
+## Run
+
+```
+$ ./out/bosh-release-info help
+NAME:
+   bosh-release-info - lists info about a boshrelease
+
+USAGE:
+   ./out/bosh-release-info [global options] command [command options] [arguments...]
+
+VERSION:
+   0.1
+
+COMMANDS:
+   package-list	lists all packages in this release
+   file-list	lists all files in all packages in this release
+   help, h	Shows a list of commands or help for one command
+```
+
+### List packages in a release
+
+```
+$ ./out/bosh-release-info package-list ~/workspace/bosh/release/dev_releases/bosh/bosh-217+dev.1.tgz
+Info for release: bosh-217+dev.1.tgz
+
+Release name: bosh
+
+Packages: director, genisoimage, health_monitor, libpq, mysql, nats, nginx, postgres, powerdns, redis, registry, ruby
+```
+
+### List all files in all packages in a release
 
 ```
 $ ./out/bosh-release-info file-list ~/workspace/bosh/release/dev_releases/bosh/bosh-217+dev.1.tgz
-```
 
-Enjoy
-
-```
 Info for release: bosh-217+dev.1.tgz
 
 Release name: bosh
