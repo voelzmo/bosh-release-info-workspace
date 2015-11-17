@@ -55,6 +55,7 @@ func FileListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger bosh
 			}
 			fmt.Printf("Release name: %s\n", manifest.Name)
 			fmt.Printf("\n")
+			filesByType := make(map[string][]string)
 
 			for _, pkg := range manifest.Packages {
 				pkgSpecFiles, err := reader.ReadPackageSpecs(pkg.Name)
@@ -64,27 +65,29 @@ func FileListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger bosh
 
 				if sortByType {
 					filesInPackage := strings.Split(pkgSpecFiles, "\n")
-					filesByType := make(map[string][]string)
 					for _, fileWithPath := range filesInPackage {
-						file := path.Base(fileWithPath)
-						re, _ := regexp.Compile(".*(LICENSE|license|License)[\\.md]??")
-						if re.MatchString(fileWithPath) {
-							fileSplit := strings.Split(file, ".")
-							fileType := fileSplit[len(fileSplit)-1]
-							filesByType[fileType] = append(filesByType[fileType], fmt.Sprintf("%s:%s", manifest.Name, fileWithPath))
-						} else {
-
+						licenseRegex, _ := regexp.Compile(".*(LICENSE|license|License)[\\..*]??")
+						gemRegex, _ := regexp.Compile(".*\\.gem$")
+						archiveRegex, _ := regexp.Compile(".*\\.(gz|tgz|zip)$")
+						if licenseRegex.MatchString(fileWithPath) {
+							filesByType["License"] = append(filesByType["License"], fmt.Sprintf("%s:%s", pkg.Name, fileWithPath))
+						} else if gemRegex.MatchString(fileWithPath) {
+							filesByType["Rubygem"] = append(filesByType["Rubygem"], fmt.Sprintf("%s:%s", pkg.Name, fileWithPath))
+						} else if archiveRegex.MatchString(fileWithPath) {
+							filesByType["Archive"] = append(filesByType["Archive"], fmt.Sprintf("%s:%s", pkg.Name, fileWithPath))
 						}
 
 					}
-					for typeName, files := range filesByType {
-						fmt.Printf("Files for type '%s'\n: %s", typeName, strings.Join(files, "\n"))
-						fmt.Printf("\n")
-					}
-
 				} else {
 					fmt.Printf("Files for package '%s': %s", pkg.Name, pkgSpecFiles)
 					fmt.Printf("\n")
+				}
+			}
+
+			if sortByType {
+				for typeName, files := range filesByType {
+					fmt.Printf("=== Files for type '%s' (%v) ===\n%s", typeName, len(files), strings.Join(files, "\n"))
+					fmt.Printf("\n\n")
 				}
 			}
 		},
