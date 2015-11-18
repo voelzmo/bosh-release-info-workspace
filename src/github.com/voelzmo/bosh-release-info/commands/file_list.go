@@ -23,13 +23,13 @@ func FileListCommand(fs boshsys.FileSystem, runner boshsys.CmdRunner, logger bos
 		Usage: "lists all files in all packages in this release",
 		Flags: []cli.Flag{
 			cli.BoolFlag{
-				Name:  "sort-by-type",
-				Usage: "sort the files according to their filetype",
+				Name:  "by-type",
+				Usage: "group files by type. Supported filetypes: LICENSE files, rubygems, archives",
 			},
 		},
 
 		Action: func(c *cli.Context) {
-			sortByType := c.Bool("sort-by-type")
+			sortByType := c.Bool("by-type")
 
 			releasePath, err := validateAndGetArgument(c.Args(), 1)
 			if err != nil {
@@ -75,7 +75,6 @@ func FileListCommand(fs boshsys.FileSystem, runner boshsys.CmdRunner, logger bos
 					}
 				} else {
 					fmt.Printf("Files for package '%s': %s\n", pkg.Name, pkgSpecFiles)
-					fmt.Printf("\n")
 				}
 			}
 
