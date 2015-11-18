@@ -9,15 +9,15 @@ import (
 	"strings"
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
-	boshcmd "github.com/cloudfoundry/bosh-utils/fileutil"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
+
 	"github.com/codegangsta/cli"
 	"github.com/voelzmo/bosh-release-info/output"
 	"github.com/voelzmo/bosh-release-info/release"
 )
 
-func FileListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger boshlog.Logger) cli.Command {
+func FileListCommand(fs boshsys.FileSystem, runner boshsys.CmdRunner, logger boshlog.Logger) cli.Command {
 	command := cli.Command{
 		Name:  "file-list",
 		Usage: "lists all files in all packages in this release",
@@ -27,34 +27,30 @@ func FileListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger bosh
 				Usage: "sort the files according to their filetype",
 			},
 		},
+
 		Action: func(c *cli.Context) {
-			if len(c.Args()) != 1 {
-				err := bosherr.Error("that's not how it works. provide the name to the release tarball!")
-				output.Fail(err, logger)
-			}
-			releasePath := c.Args()[0]
 			sortByType := c.Bool("sort-by-type")
 
-			// relasePathSplit := strings.Split(releasePath, "/")
-			// releaseName := relasePathSplit[len(relasePathSplit)-1]
-			releaseName := path.Base(releasePath)
-			fmt.Printf("Info for release: %s\n", releaseName)
-			fmt.Printf("\n")
+			releasePath, err := validateAndGetArgument(c.Args(), 1)
+			if err != nil {
+				output.Fail(bosherr.WrapError(err, "Failed to get path to release tarball:"), logger)
+			}
 
+			releaseName := path.Base(releasePath)
 			tmpDir, err := ioutil.TempDir("", releaseName)
 			if err != nil {
 				output.Fail(bosherr.WrapError(err, "Failed creating temporary directory:"), logger)
 			}
 			defer os.RemoveAll(tmpDir)
 
-			reader := release.NewReader(releasePath, tmpDir, fs, comp)
+			reader := release.NewReader(releasePath, tmpDir, fs, runner)
 
-			manifest, err := reader.Read()
+			manifest, err := reader.ReadManifest()
 			if err != nil {
 				output.Fail(bosherr.WrapError(err, "Failed reading release:"), logger)
 			}
-			fmt.Printf("Release name: %s\n", manifest.Name)
-			fmt.Printf("\n")
+			fmt.Printf("Info for release '%s', version '%s'\n\n", manifest.Name, manifest.Version)
+
 			filesByType := make(map[string][]string)
 
 			for _, pkg := range manifest.Packages {
@@ -76,10 +72,9 @@ func FileListCommand(fs boshsys.FileSystem, comp boshcmd.Compressor, logger bosh
 						} else if archiveRegex.MatchString(fileWithPath) {
 							filesByType["Archive"] = append(filesByType["Archive"], fmt.Sprintf("%s:%s", pkg.Name, fileWithPath))
 						}
-
 					}
 				} else {
-					fmt.Printf("Files for package '%s': %s", pkg.Name, pkgSpecFiles)
+					fmt.Printf("Files for package '%s': %s\n", pkg.Name, pkgSpecFiles)
 					fmt.Printf("\n")
 				}
 			}

@@ -9,6 +9,7 @@ import (
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshcmd "github.com/cloudfoundry/bosh-utils/fileutil"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
+	"github.com/voelzmo/bosh-release-info/fileutil"
 )
 
 type Manifest struct {
@@ -40,6 +41,7 @@ type reader struct {
 	extractedReleasePath string
 	fs                   boshsys.FileSystem
 	extractor            boshcmd.Compressor
+	lister               fileutil.Lister
 }
 
 type PackageSpec struct {
@@ -48,7 +50,7 @@ type PackageSpec struct {
 }
 
 type Reader interface {
-	Read() (Manifest, error)
+	ReadManifest() (Manifest, error)
 	ReadPackageSpecs(string) (string, error)
 }
 
@@ -56,17 +58,21 @@ func NewReader(
 	tarFilePath string,
 	extractedReleasePath string,
 	fs boshsys.FileSystem,
-	extractor boshcmd.Compressor,
+	runner boshsys.CmdRunner,
 ) Reader {
+	tarballExtractor := boshcmd.NewTarballCompressor(runner, fs)
+	tarballLister := fileutil.NewTarballLister(runner, fs)
+
 	return &reader{
 		tarFilePath:          tarFilePath,
 		extractedReleasePath: extractedReleasePath,
 		fs:                   fs,
-		extractor:            extractor,
+		extractor:            tarballExtractor,
+		lister:               tarballLister,
 	}
 }
 
-func (r *reader) Read() (Manifest, error) {
+func (r *reader) ReadManifest() (Manifest, error) {
 	err := r.extractor.DecompressFileToDir(r.tarFilePath, r.extractedReleasePath, boshcmd.CompressorOptions{})
 	if err != nil {
 		return Manifest{}, bosherr.WrapError(err, "Extracting release")
@@ -89,7 +95,7 @@ func (r *reader) Read() (Manifest, error) {
 
 func (r *reader) ReadPackageSpecs(pkgName string) (string, error) {
 	var allFiles string
-	allFiles, _ = r.extractor.ListFilesInArchive(path.Join(r.extractedReleasePath, fmt.Sprintf("packages/%s.tgz", pkgName)))
+	allFiles, _ = r.lister.ListFilesInArchive(path.Join(r.extractedReleasePath, fmt.Sprintf("packages/%s.tgz", pkgName)))
 
 	return allFiles, nil
 }

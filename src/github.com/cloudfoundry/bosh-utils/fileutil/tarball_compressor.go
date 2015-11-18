@@ -33,16 +33,6 @@ func (c tarballCompressor) CompressFilesInDir(dir string) (string, error) {
 	return tarballPath, nil
 }
 
-func (c tarballCompressor) ListFilesInArchive(tarballPath string) (string, error) {
-
-	stdout, _, _, err := c.cmdRunner.RunCommand("tar", "-tzf", tarballPath)
-	if err != nil {
-		return "", bosherr.WrapError(err, "Shelling out to tar")
-	}
-
-	return stdout, nil
-}
-
 func (c tarballCompressor) DecompressFileToDir(tarballPath string, dir string, options CompressorOptions) error {
 	sameOwnerOption := "--no-same-owner"
 	if options.SameOwner {

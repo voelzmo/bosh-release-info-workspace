@@ -4,7 +4,6 @@ import (
 	"os"
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
-	boshcmd "github.com/cloudfoundry/bosh-utils/fileutil"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
 	"github.com/codegangsta/cli"
@@ -21,11 +20,10 @@ func main() {
 	logger := newLogger()
 	fileSystem := boshsys.NewOsFileSystemWithStrictTempRoot(logger)
 	cmdRunner := boshsys.NewExecCmdRunner(logger)
-	compressor := boshcmd.NewTarballCompressor(cmdRunner, fileSystem)
 
 	app.Commands = []cli.Command{
-		commands.PackageListCommand(fileSystem, compressor, logger),
-		commands.FileListCommand(fileSystem, compressor, logger),
+		commands.PackageListCommand(fileSystem, cmdRunner, logger),
+		commands.FileListCommand(fileSystem, cmdRunner, logger),
 	}
 
 	app.Run(os.Args)
@@ -41,4 +39,5 @@ func newLogger() boshlog.Logger {
 	}
 
 	return boshlog.NewLogger(level)
+
 }

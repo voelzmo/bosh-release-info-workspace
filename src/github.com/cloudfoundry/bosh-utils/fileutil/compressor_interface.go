@@ -12,6 +12,4 @@ type Compressor interface {
 
 	// CleanUp cleans up compressed file after it was used
 	CleanUp(path string) error
-
-	ListFilesInArchive(tarballPath string) (string, error)
 }
