@@ -1,5 +1,5 @@
-98284f7 src/github.com/cloudfoundry/bosh-utils/.git
-f445c89 src/github.com/codegangsta/cli/.git
+8cb9faa src/github.com/cloudfoundry/bosh-utils/.git
+c75c9d0 src/github.com/codegangsta/cli/.git
 39d2c24 src/github.com/onsi/ginkgo/.git
 2152b45 src/github.com/onsi/gomega/.git
 53feefa src/gopkg.in/yaml.v2/.git
